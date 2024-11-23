@@ -34,6 +34,24 @@
     state: latest
     update_cache: true
 
+- name: Ensure the Docker group exists
+  group:
+    name: docker
+    state: present
+
+- name: Add the current user to the Docker group
+  user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+
+- name: Refresh group membership
+  become: true
+  shell: newgrp docker
+  args:
+    executable: /bin/bash
+  when: ansible_user == lookup('env', 'USER')
+
 - name: Add GitHub SSH configuration to ~/.ssh/config
   blockinfile:
     path: ~/.ssh/config
