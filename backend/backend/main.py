@@ -47,40 +47,37 @@ async def is_blocked(
     request: Request, 
     db: Session = Depends(get_db)
 ):
-    try:
-        ip, domain = get_client_ip(request, db=db)
-        
-        
-        with db.begin():
-            # Check if domain exists
-            customer = db.query(Customer).filter(Customer.domain == domain).first()
-            if not customer:
-                customer = Customer(domain=domain)
-                db.add(customer)
-                db.flush()
-        
-            logger.info(f"Checking IP: {ip}, Domain: {domain}")
-            ip_blocked = (
-                db.query(IPList)
-                .filter(
-                    IPList.ip_address == ip,
-                    IPList.is_blocked == True
-                )
-                .first()    
+    ip, domain = get_client_ip(request, db=db)
+    
+    
+    with db.begin():
+        # Check if domain exists
+        customer = db.query(Customer).filter(Customer.domain == domain).first()
+        if not customer:
+            customer = Customer(domain=domain)
+            db.add(customer)
+            db.flush()
+    
+        logger.info(f"Checking IP: {ip}, Domain: {domain}")
+        ip_blocked = (
+            db.query(IPList)
+            .filter(
+                IPList.ip_address == ip,
+                IPList.is_blocked == True
             )
-        
-        if ip_blocked:
-            raise HTTPException(status_code=403, detail="IP is blocked")
-        
-        return {
-            "ip": ip,
-            "domain": domain,
-            "is_blocked": bool(ip_blocked)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error in is_blocked: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+            .first()    
+        )
+    
+    if ip_blocked:
+        logger.info(f"IP blocked: {ip_blocked}")
+        raise HTTPException(status_code=403, detail="IP is blocked")
+    logger.info(f"IP not blocked: {ip_blocked}")
+    return {
+        "ip": ip,
+        "domain": domain,
+        "is_blocked": bool(ip_blocked)
+    }
+    
 
 @app.get("/")
 async def read_root(db: Session = Depends(get_db)):
