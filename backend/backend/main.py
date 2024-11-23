@@ -47,30 +47,30 @@ async def is_blocked(
     request: Request, 
     db: Session = Depends(get_db)
 ):
-    ip, domain = get_client_ip(request, db=db)
-    
-    logger.info(f"Checking IP: {ip}, Domain: {domain}")
-    
-    blocked_ip = db.query(IPList).filter(
-        IPList.ip_address == str(ip),
-        IPList.domain == domain
-    ).first()
-    
-    # Add detailed debugging
-    logger.info(f"Database record found: {blocked_ip}")
-    if blocked_ip:
-        logger.info(f"is_blocked value in database: {blocked_ip.is_blocked}")
-        logger.info(f"type of is_blocked: {type(blocked_ip.is_blocked)}")
-    
-    is_ip_blocked = blocked_ip.is_blocked if blocked_ip else False
-    
-    logger.info(f"Final is_blocked value: {is_ip_blocked}")
-    
-    return {
-        "ip": ip,
-        "domain": domain,
-        "is_blocked": is_ip_blocked
-    }
+    try:
+        ip, domain = get_client_ip(request, db=db)
+        
+        logger.info(f"Checking IP: {ip}, Domain: {domain}")
+        
+        ip_blocked = (
+            db.query(IPList)
+            .filter(
+                IPList.ip_address == ip,
+                IPList.domain == domain,
+                IPList.is_blocked == True
+            )
+            .first()
+        )
+        
+        return {
+            "ip": ip,
+            "domain": domain,
+            "is_blocked": bool(ip_blocked)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in is_blocked: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/")
 async def read_root(db: Session = Depends(get_db)):
