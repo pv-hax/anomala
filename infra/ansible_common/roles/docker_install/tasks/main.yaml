@@ -34,3 +34,11 @@
     state: latest
     update_cache: true
 
+- name: Add GitHub SSH configuration to ~/.ssh/config
+  blockinfile:
+    path: ~/.ssh/config
+    create: yes
+    block: |
+      Host github.com
+        HostName github.com
+        IdentityFile ~/.ssh/deploy-hack
