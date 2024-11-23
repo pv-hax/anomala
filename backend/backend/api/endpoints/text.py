@@ -68,17 +68,19 @@ async def create_text_event(
                 db.flush()
 
             # Fix the IP blocking check query
+            logger.info(f"Checking IP: {ip}, Domain: {domain}")
             ip_blocked = (
                 db.query(IPList)
                 .filter(
                     IPList.ip_address == ip,
-                    IPList.domain == domain,
                     IPList.is_blocked == True
                 )
                 .first()
             )
             if ip_blocked:
+                logger.info(f"IP blocked: {ip_blocked}")
                 raise HTTPException(status_code=403, detail="IP is blocked")
+            logger.info(f"IP not blocked: {ip_blocked}")
 
             text_event = TextMessage(
                 domain=domain,
