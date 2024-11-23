@@ -1,8 +1,8 @@
 from typing import Tuple
 from fastapi import Request, HTTPException, Depends
 from sqlalchemy.orm import Session
-from .database import get_db
-from .models import IPList
+from ..core.database import get_db
+from ..models import IPList, Customer
 
 def get_client_ip(
     request: Request, 
