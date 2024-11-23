@@ -19,7 +19,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#000000] text-white">
       <div className="container mx-auto p-6 space-y-6">
         <TitleHeader />
         <AttackChart logs={logs} />

@@ -1,57 +1,108 @@
 import { useState, useEffect } from 'react';
 
 export default function LogsTable({ logs }) {
+    const [sortConfig, setSortConfig] = useState({
+        key: 'timestamp',
+        direction: 'desc'
+    });
+    const [sortedLogs, setSortedLogs] = useState(logs);
+
+    // Sort function
+    const sortLogs = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+
+        const sorted = [...logs].sort((a, b) => {
+            if (key === 'timestamp') {
+                return direction === 'asc'
+                    ? new Date(a[key]) - new Date(b[key])
+                    : new Date(b[key]) - new Date(a[key]);
+            }
+
+            if (a[key] < b[key]) return direction === 'asc' ? -1 : 1;
+            if (a[key] > b[key]) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        setSortedLogs(sorted);
+        setSortConfig({ key, direction });
+    };
+
+    // Update sorted logs when props change
+    useEffect(() => {
+        setSortedLogs(logs);
+    }, [logs]);
+
+    // Sort indicator component
+    const SortIndicator = ({ columnKey }) => {
+        if (sortConfig.key !== columnKey) return <span className="ml-1">↕</span>;
+        return <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
+    };
+
     return (
-        <div className="overflow-hidden rounded-xl relative border border-white/10 bg-[#121212]">
+        <div className="overflow-hidden rounded-xl relative border border-white/10 bg-black">
             <div className="absolute inset-0">
-                <div className="absolute inset-0 bg-gradient-to-tl from-[#00ff94] via-[#00ff9415] to-transparent opacity-20" />
-                <div className="absolute inset-0 bg-gradient-to-tl from-[#00ff94] via-transparent to-transparent opacity-10" />
+                <div className="absolute inset-0 bg-gradient-to-bl from-white via-white/10 to-transparent opacity-[0.02]" />
+                <div className="absolute inset-0 bg-gradient-to-bl from-white via-transparent to-transparent opacity-[0.03]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-white/10 to-transparent opacity-[0.08]" />
             </div>
             <div className="relative z-10 p-6 border-b border-white/10">
-                <h2 className="text-white text-xl font-semibold">Attack Logs</h2>
+                <h2 className="font-inter font-light text-2xl text-white mb-2">Logs</h2>
             </div>
             <div className="relative z-10 overflow-x-auto">
                 <table className="min-w-full divide-y divide-white/10">
                     <thead className="bg-black/40">
                         <tr>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-[#00ff94] uppercase tracking-wider">
+                            <th
+                                className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-white/80"
+                                onClick={() => sortLogs('timestamp')}
+                            >
                                 Timestamp
+                                <SortIndicator columnKey="timestamp" />
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-[#00ff94] uppercase tracking-wider">
+                            <th
+                                className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-white/80"
+                                onClick={() => sortLogs('ip')}
+                            >
                                 IP
+                                <SortIndicator columnKey="ip" />
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-[#00ff94] uppercase tracking-wider">
+                            <th
+                                className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-white/80"
+                                onClick={() => sortLogs('type_of_attack')}
+                            >
                                 Type of Attack
+                                <SortIndicator columnKey="type_of_attack" />
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-[#00ff94] uppercase tracking-wider">
+                            <th
+                                className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-white/80"
+                                onClick={() => sortLogs('blocked')}
+                            >
                                 Status
+                                <SortIndicator columnKey="blocked" />
                             </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
-                        {logs.map((log, index) => (
+                        {sortedLogs.map((log, index) => (
                             <tr
                                 key={index}
-                                className={`
-                                    transition-colors duration-150
-                                    ${log.blocked
-                                        ? 'bg-red-900/20 hover:bg-red-900/30'
-                                        : 'hover:bg-white'
-                                    }
-                                `}
+                                className="transition-colors duration-150 hover:bg-white/5"
                             >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span className={log.blocked ? 'text-red-200' : 'text-gray-300'}>
+                                    <span className="text-gray-300">
                                         {new Date(log.timestamp).toLocaleString()}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                                    <span className={log.blocked ? 'text-red-200' : 'text-gray-300'}>
+                                    <span className="text-gray-300">
                                         {log.ip}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span className={log.blocked ? 'text-red-200' : 'text-gray-300'}>
+                                    <span className="text-gray-300">
                                         {log.type_of_attack}
                                     </span>
                                 </td>

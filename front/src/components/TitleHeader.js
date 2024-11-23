@@ -1,7 +1,12 @@
 export default function TitleHeader() {
     return (
-        <div className="text-center py-6 relative overflow-hidden">
-            {/* Animated background glow */}
+        <div className="text-center py-6 relative">
+            {/* Main background glow - positioned directly behind title */}
+            <div className="absolute inset-0 flex justify-center items-center">
+                <div className="w-[600px] h-[400px] bg-[#00ff94] rounded-full filter blur-[120px] opacity-[0.04] animate-pulse"></div>
+            </div>
+
+            {/* Secondary glow behind title */}
             <div className="absolute inset-0 flex justify-center items-center">
                 <div className="w-64 h-64 bg-[#00ff94] rounded-full filter blur-[100px] opacity-10 animate-pulse"></div>
             </div>
