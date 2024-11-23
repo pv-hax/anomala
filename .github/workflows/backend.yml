@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: ssh connection
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.SSH_IP }}
         username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        key: ${{ secrets.PRIVATE_KEY }}
         port: 22
         script: |
           cd ~/anomala/backend
@@ -22,6 +22,5 @@ jobs:
           docker kill $(docker ps -q)
           docker rm $(docker ps -a -q)
           docker rmi $(docker images -q)
-          docker-compose build
-          docker-compose up -d
-
+          docker compose build
+          docker compose up -d
