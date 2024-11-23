@@ -22,6 +22,7 @@ COPY pyproject.toml poetry.lock ./
 
 # Install dependencies
 RUN poetry install --no-root
+ENTRYPOINT ["./entrypoint.sh"]
 
 # Copy the rest of the application
 COPY . .
