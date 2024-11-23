@@ -1,17 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from pydantic_settings import BaseSettings
+from sqlalchemy.orm import sessionmaker
+from os import getenv
 
-class Settings(BaseSettings):
-    DATABASE_URL: str
+# Direct database connection using docker network
+SQLALCHEMY_DATABASE_URL = "postgresql://yourusername:yourpassword@db:5432/yourdbname"
 
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
-engine = create_engine(settings.DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 def get_db():
     db = SessionLocal()

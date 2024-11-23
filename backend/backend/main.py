@@ -1,45 +1,23 @@
 from typing import Union
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from os import getenv
 from pydantic import BaseModel
 from .models import Base, TextMessage, IPList, Customer
+from .core.database import get_db, engine  # Move database setup to core/database.py
+from .api.endpoints import text  # Import the text router
 import random
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Anomal.AI")
 
-# Get database URL from environment variable
-DATABASE_URL = getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+# Include the text router
+app.include_router(text.router, prefix="/api")
 
-# Create SessionLocal class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-class MessageRequest(BaseModel):
-    message: str
-
-@app.post("/text")
-async def save_text(message_req: MessageRequest, db: Session = Depends(get_db)):
-    try:
-        new_message = TextMessage(
-            message=message_req.message,
-            ip_address=3232235777  # You'll want to get this from the request
-        )
-        db.add(new_message)
-        db.commit()
-        db.refresh(new_message)
-        return {"status": "success", "message": "Text saved successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Remove the /text endpoint as it's now handled by the router
 
 @app.get("/is_blocked")
 async def is_blocked(db: Session = Depends(get_db)):
@@ -55,3 +33,7 @@ async def read_root(db: Session = Depends(get_db)):
         return {"msg": "Health Ok", "database": "connected"}
     except Exception as e:
         return {"msg": "Health Ok", "database": "not connected", "error": str(e)}
+
+@app.post("/test")
+async def test(db: Session = Depends(get_db)):
+    pass
