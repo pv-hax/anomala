@@ -6,8 +6,8 @@ from ..models import IPList, Customer
 
 def get_client_ip(
     request: Request, 
-    db: Session = Depends(get_db),
-    require_origin: bool = True
+    db: Session,
+    require_origin: bool = False
 ) -> Tuple[str, str]:
     """
     Get client IP and domain from request and ensure IP exists in database
@@ -25,16 +25,21 @@ def get_client_ip(
     if not ip:
         raise HTTPException(status_code=400, detail="Could not determine client IP")
     
-    # Always get domain since we're changing the default behavior
-    domain = request.headers.get("Origin")
-    if not domain and require_origin:
-        raise HTTPException(status_code=400, detail="Origin header is required")
+    # Safely handle domain verification
+    domain = request.headers.get("Origin", "")
+    if domain:
+        try:
+            # Strip http:// or https:// if present
+            domain = domain.replace("http://", "").replace("https://", "")
+            # Remove port if present
+            domain = domain.split(":")[0].strip()
+            # Additional validation could go here
+        except Exception:
+            # If any error occurs during domain processing, set to empty string
+            domain = ""
     
-    domain = domain or ""
-    # Strip http:// or https:// if present
-    domain = domain.replace("http://", "").replace("https://", "")
-    # Remove port if present
-    domain = domain.split(":")[0]
+    if require_origin and not domain:
+        raise HTTPException(status_code=400, detail="Valid Origin header is required")
     
     # Check if IP exists in database
     ip_entry = db.query(IPList).filter(IPList.ip_address == str(ip)).first()

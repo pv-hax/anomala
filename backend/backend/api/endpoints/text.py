@@ -57,7 +57,7 @@ async def create_text_event(
     try:
         logger.info("Starting text event creation")
 
-        ip, domain = get_client_ip(request)
+        ip, domain = get_client_ip(request, db=db)
         
         with db.begin():
             # Check if domain exists
