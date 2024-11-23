@@ -26,7 +26,7 @@ resource "aws_instance" "ec2_hackathon" {
 resource "aws_security_group" "main" {
   egress = [
     {
-      cidr_blocks      = ["0.0.0.0/0", ]
+      cidr_blocks      = ["0.0.0.0/0"]
       description      = ""
       from_port        = 0
       ipv6_cidr_blocks = []
@@ -59,9 +59,21 @@ resource "aws_security_group" "main" {
       security_groups  = []
       self             = false
       to_port          = 80
+    },
+    {
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "Allow HTTP traffic on port 8000"
+      from_port        = 8000
+      ipv6_cidr_blocks = []
+      prefix_list_ids  = []
+      protocol         = "tcp"
+      security_groups  = []
+      self             = false
+      to_port          = 8000
     }
   ]
 }
+
 
 resource "aws_key_pair" "deployer" {
   key_name   = "key-for-hackathon"
