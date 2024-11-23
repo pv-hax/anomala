@@ -57,24 +57,23 @@ async def create_text_event(
     try:
         logger.info("Starting text event creation")
 
-        ip_int, domain = get_client_ip(request)
+        ip, domain = get_client_ip(request)
         
-        # Use with statement for transaction management
         with db.begin():
             # Check if domain exists
             customer = db.query(Customer).filter(Customer.domain == domain).first()
             if not customer:
                 customer = Customer(domain=domain)
                 db.add(customer)
-                db.flush()  # Use flush instead of commit inside transaction
+                db.flush()
 
-            # Check if IP is blocked - fix the is_blocked comparison
+            # Fix the IP blocking check query
             ip_blocked = (
                 db.query(IPList)
                 .filter(
-                    IPList.ip_address == ip_int,
+                    IPList.ip_address == ip,
                     IPList.domain == domain,
-                    IPList.is_blocked is True,
+                    IPList.is_blocked == True
                 )
                 .first()
             )
@@ -83,7 +82,7 @@ async def create_text_event(
 
             text_event = TextMessage(
                 domain=domain,
-                ip_address=ip_int,
+                ip_address=ip,
                 message=event.message,
                 type=event.type,
             )
@@ -96,7 +95,7 @@ async def create_text_event(
                 db,
                 text_event.id,
                 event.message,
-                ip_int,
+                ip,
                 domain
             )
 

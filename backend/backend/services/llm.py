@@ -20,7 +20,7 @@ class LLMService:
         self.client = AsyncOpenAI(api_key=getenv("OPENAI_API_KEY"))
 
     async def analyze_text(
-        self, event_id: int, text: str, ip: int, domain: str
+        self, event_id: int, text: str, ip: str, domain: str
     ) -> Dict:
         """Analyze text using OpenAI API to detect malicious content and attack type"""
         try:
