@@ -1,45 +1,35 @@
 import LogsTable from "../components/LogsTable";
 import AttackChart from "../components/AttackChart";
 import TitleHeader from "../components/TitleHeader";
-import { useState, useEffect } from 'react';
+import { useState } from "react";
+import { GetServerSideProps } from "next";
 
-export default function Home() {
-  const [logs, setLogs] = useState([]);
-  const [dataSource, setDataSource] = useState('sample');
+// Helper to format dates consistently
+const formatLogs = (logs) => {
+  return logs.map((log) => ({
+    ...log,
+    timestamp: new Date(log.timestamp).toISOString(), // Use ISO format to avoid locale mismatches
+  }));
+};
 
-  const fetchData = async () => {
-    try {
-      if (dataSource === 'sample') {
-        const response = await fetch('/api/logs');
-        const data = await response.json();
-        const sortedLogs = data.logs.sort((a, b) =>
-          new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        setLogs(sortedLogs);
-      } else {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_NGROK_URL}/attack-logs`, {
-          headers: new Headers({
-            "ngrok-skip-browser-warning": "69420",
-          }),
-        });
-        const data = await response.json();
-        console.log("DATA", data);
-        const sortedLogs = data.logs.sort((a, b) =>
-          new Date(b.timestamp) - new Date(a.timestamp)
-        );
-        setLogs(sortedLogs);
-      }
-    } catch (error) {
-      console.error('Error loading logs:', error);
-    }
-  };
+export const getServerSideProps = async () => {
+  const response = await fetch(
+    "http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/attack-logs"
+  );
+  const data = await response.json();
 
-  useEffect(() => {
-    fetchData();
-  }, [dataSource]);
+  // Format logs on the server
+  const formattedLogs = formatLogs(data.logs);
+
+  return { props: { initialLogs: formattedLogs } };
+};
+
+export default function Home({ initialLogs }) {
+  const [logs, setLogs] = useState(initialLogs);
+  const [dataSource, setDataSource] = useState("sample");
 
   const toggleDataSource = () => {
-    setDataSource(prev => prev === 'sample' ? 'api' : 'sample');
+    setDataSource((prev) => (prev === "sample" ? "api" : "sample"));
   };
 
   return (
@@ -51,7 +41,7 @@ export default function Home() {
             onClick={toggleDataSource}
             className="px-4 py-2 rounded-lg bg-[#00ff94] text-black font-medium hover:bg-[#00ff94]/90 transition-colors"
           >
-            {dataSource === 'sample' ? 'Switch to Live Data' : 'Switch to Sample Data'}
+            {dataSource === "sample" ? "Switch to Live Data" : "Switch to Sample Data"}
           </button>
         </div>
         <AttackChart logs={logs} />
