@@ -1,0 +1,27 @@
+name: Deployment Workflow
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: ssh connection
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_IP }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd ~/anomala/backend
+          git pull
+          docker kill $(docker ps -q)
+          docker rm $(docker ps -a -q)
+          docker rmi $(docker images -q)
+          docker-compose build
+          docker-compose up -d
+
