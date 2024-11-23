@@ -43,8 +43,11 @@ async def options_handler(request: Request):
     )
 
 @app.get("/is_blocked")
-async def is_blocked(request: Request, db: Session = Depends(get_db)):
-    ip, domain = get_client_ip(request)
+async def is_blocked(
+    request: Request, 
+    db: Session = Depends(get_db)
+):
+    ip, domain = get_client_ip(request, db=db)
     
     blocked_ip = db.query(IPList).filter(
         IPList.ip_address == str(ip),
