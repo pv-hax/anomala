@@ -1,5 +1,10 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from sqlalchemy import desc
+from typing import List
 from .models import Base, TextMessage, IPList, Customer
 from .core.database import get_db, engine 
 from .api.endpoints import text  
@@ -44,7 +49,7 @@ async def is_blocked(request: Request, db: Session = Depends(get_db)):
     else:
         ip = request.client.host
     
-    blocked_ip = db.query(IPList).filter(IPList.ip == ip).first()
+    blocked_ip = db.query(IPList).filter(IPList.ip_address == str(ip)).first()
     
     return {
         "ip": ip,
