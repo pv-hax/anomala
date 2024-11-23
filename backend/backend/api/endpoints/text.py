@@ -63,11 +63,16 @@ async def create_text_event(
         ip_int, domain = get_client_ip(request)
         logger.info(f"Debug - Received request for domain: {domain}")
 
-        # Verify customer
+        # Check if domain exists, if not create it
         customer = db.query(Customer).filter(Customer.domain == domain).first()
         if not customer:
-            logger.info(f"Debug - Customer not found for domain: {domain}")
-            raise HTTPException(status_code=403, detail="Domain not authorized")
+            logger.info(f"Debug - Creating new customer for domain: {domain}")
+            customer = Customer(
+                domain=domain,
+            )
+            db.add(customer)
+            db.commit()
+            db.refresh(customer)
 
         # Check if IP is blocked
         ip_blocked = (
