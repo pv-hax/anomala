@@ -52,15 +52,26 @@ async def is_blocked(
         
         logger.info(f"Checking IP: {ip}, Domain: {domain}")
         
-        ip_blocked = (
-            db.query(IPList)
-            .filter(
-                IPList.ip_address == ip,
-                IPList.domain == domain,
-                IPList.is_blocked == True
+        with db.begin():
+            # Check if domain exists
+            customer = db.query(Customer).filter(Customer.domain == domain).first()
+            if not customer:
+                customer = Customer(domain=domain)
+                db.add(customer)
+                db.flush()
+        
+            ip_blocked = (
+                db.query(IPList)
+                .filter(
+                    IPList.ip_address == ip,
+                    IPList.domain == domain,
+                    IPList.is_blocked == True
+                )
+                .first()    
             )
-            .first()
-        )
+        
+        if ip_blocked:
+            raise HTTPException(status_code=403, detail="IP is blocked")
         
         return {
             "ip": ip,
