@@ -43,8 +43,8 @@ export default function AttackChart({ logs }) {
             <div className="relative z-10">
                 <div className="mb-6">
                     <div className="mb-2">
-                        <h2 className="font-inter font-light text-2xl text-white mb-2">Attacks</h2>
-                        <p className="text-sm text-gray-400 mb-8">Attacks per unit of time</p>
+                        <h2 className="font-inter font-light text-2xl text-white mb-2">Detected attacks</h2>
+                        <p className="text-sm text-gray-400 mb-8">Grouped by units of time</p>
                     </div>
                     <div className="flex gap-6 text-sm">
                         <button
