@@ -1,12 +1,8 @@
-from typing import Union
 from fastapi import FastAPI, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
-from os import getenv
-from pydantic import BaseModel
 from .models import Base, TextMessage, IPList, Customer
 from .core.database import get_db, engine 
 from .api.endpoints import text  
-import random
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -18,7 +14,7 @@ app = FastAPI(title="Anomal.AI")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["127.0.0.1:5500", "localhost:5500", "127.0.0.1", "localhost", "http://127.0.0.1:5500"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],  
     allow_headers=["*"],  
@@ -34,18 +30,26 @@ async def options_handler(request: Request):
         content="OK",
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "Content-Type, Authorization, Origin, Accept",
             "Access-Control-Max-Age": "600",
         }
     )
 
 @app.get("/is_blocked")
-async def is_blocked(db: Session = Depends(get_db)):
-    # Get real IP from request in production
-    ip = f"{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}"
-    blocked_ip = True
-    return {"ip": ip, "is_blocked": blocked_ip.is_blocked if blocked_ip else False}
+async def is_blocked(request: Request, db: Session = Depends(get_db)):
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        ip = forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.client.host
+    
+    blocked_ip = db.query(IPList).filter(IPList.ip == ip).first()
+    
+    return {
+        "ip": ip,
+        "is_blocked": blocked_ip.is_blocked if blocked_ip else False
+    }
 
 @app.get("/")
 async def read_root(db: Session = Depends(get_db)):
