@@ -2,11 +2,25 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_instance" "ec2_exploratorio" {
+resource "aws_instance" "ec2_hackathon" {
   ami                    = "ami-0cd59ecaf368e5ccf"
   instance_type          = "t3.medium"
-  key_name               = "key-for-demo-2"
+  key_name               = "key-for-hackathon"
   vpc_security_group_ids = [aws_security_group.main.id]
+
+  provisioner "remote-exec" {
+    inline = ["echo 'Wait until SSH is ready'"]
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("~/.ssh/hackathon")
+      host        = self.public_ip
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "ansible-playbook -i ${self.public_ip}, --private-key ~/.ssh/hackathon ./ansible_common/setup.yaml"
+  }
 }
 
 resource "aws_security_group" "main" {
@@ -50,6 +64,6 @@ resource "aws_security_group" "main" {
 }
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "key-for-demo-2"
+  key_name   = "key-for-hackathon"
   public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBGW96cmV1ntXeKG/lexB0VJMuSyGx1uBYM3Y0rUPXEV hackathon@devs.com"
 }
