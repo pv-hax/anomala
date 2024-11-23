@@ -59,6 +59,43 @@ async def read_root(db: Session = Depends(get_db)):
     except Exception as e:
         return {"msg": "Health Ok", "database": "not connected", "error": str(e)}
 
-@app.post("/test")
-async def test(db: Session = Depends(get_db)):
-    pass
+
+# Pydantic models for response
+class AttackLog(BaseModel):
+    ip: str
+    type_of_attack: str
+    timestamp: datetime | None = None
+    blocked: bool
+
+class AttackLogsResponse(BaseModel):
+    timestamp: datetime
+    logs: List[AttackLog]
+
+@app.get("/attack-logs", response_model=AttackLogsResponse)
+async def get_attack_logs(db: Session = Depends(get_db)):
+    # Get the current timestamp in UTC
+    current_time = datetime.now(ZoneInfo("UTC"))
+
+    # Query the most recent 850 text messages, ordered by newest first
+    messages = (
+        db.query(TextMessage)
+        .order_by(desc(TextMessage.created_at))
+        .limit(850)
+        .all()
+    )
+
+    # Transform the database records into the response format
+    logs = [
+        AttackLog(
+            ip=message.ip_address,
+            type_of_attack="sqlinjection",  # Since we're only dealing with TextMessage
+            timestamp=message.created_at,
+            blocked=message.caused_block if message.caused_block is not None else False
+        )
+        for message in messages
+    ]
+
+    return AttackLogsResponse(
+        timestamp=current_time,
+        logs=logs
+    )
