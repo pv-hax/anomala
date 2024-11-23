@@ -50,7 +50,6 @@ async def is_blocked(
     try:
         ip, domain = get_client_ip(request, db=db)
         
-        logger.info(f"Checking IP: {ip}, Domain: {domain}")
         
         with db.begin():
             # Check if domain exists
@@ -60,11 +59,11 @@ async def is_blocked(
                 db.add(customer)
                 db.flush()
         
+            logger.info(f"Checking IP: {ip}, Domain: {domain}")
             ip_blocked = (
                 db.query(IPList)
                 .filter(
                     IPList.ip_address == ip,
-                    IPList.domain == domain,
                     IPList.is_blocked == True
                 )
                 .first()    
