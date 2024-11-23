@@ -3,6 +3,7 @@ from fastapi import Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 from ..core.database import get_db
 from ..models import IPList, Customer
+from ipaddress import ip_address as validate_ip
 
 def get_client_ip(
     request: Request, 
@@ -14,12 +15,27 @@ def get_client_ip(
     Returns:
         Tuple[str, str]: Tuple of (ip_address, domain)
     """
-    # Get IP
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        ip = forwarded.split(",")[0].strip()
-    else:
-        ip = request.client.host or ""
+    # Get IP - check headers in priority order
+    ip = None
+    
+    # Check common proxy headers
+    if request.headers.get("CF-Connecting-IP"):  # Cloudflare
+        ip = request.headers.get("CF-Connecting-IP")
+    elif request.headers.get("X-Real-IP"):  # Nginx proxy
+        ip = request.headers.get("X-Real-IP")
+    elif request.headers.get("X-Forwarded-For"):  # Standard proxy header
+        # X-Forwarded-For can contain multiple IPs, get the first one
+        ip = request.headers.get("X-Forwarded-For").split(",")[0].strip()
+    
+    # Fallback to direct client IP
+    if not ip:
+        ip = request.client.host
+    
+    # Validate IP format
+    try:
+        validate_ip(ip)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid IP address format")
     
     # Validate IP
     if not ip:
@@ -49,13 +65,11 @@ def get_client_ip(
         ip_entry = IPList(
             ip_address=str(ip),
             domain=domain,
-            is_blocked=False,  # Default to not blocked
-            request_count=1
+            is_blocked=False  # Default to not blocked
         )
         db.add(ip_entry)
     else:
-        # Update existing entry
-        ip_entry.request_count += 1
+        # Update existing entry only if we have a new domain
         if domain and not ip_entry.domain:
             ip_entry.domain = domain
     
