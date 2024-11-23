@@ -1,0 +1,23 @@
+{
+    "timestamp": "2024-11-23T10:45:00Z",
+    "logs": [
+        {
+            "ip": "192.168.1.45",
+            "type_of_attack": "sqlinjection",
+            "timestamp": "2024-11-23T10:40:00Z",
+            "blocked": true
+        },
+        {
+            "ip": "203.0.113.25",
+            "type_of_attack": "mousemovements",
+            "timestamp": "2024-11-23T10:42:30Z",
+            "blocked": false
+        },
+        {
+            "ip": "198.51.100.14",
+            "type_of_attack": "sqlinjection",
+            "timestamp": "2024-11-23T10:43:15Z",
+            "blocked": true
+        }
+    ]
+}
