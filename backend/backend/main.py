@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from os import getenv
 from pydantic import BaseModel
-from .models import Base, TextMessage, BlockedIP, Customer
+from .models import Base, TextMessage, IPList, Customer
 import random
 
 app = FastAPI(title="Anomal.AI")
@@ -45,7 +45,7 @@ async def save_text(message_req: MessageRequest, db: Session = Depends(get_db)):
 async def is_blocked(db: Session = Depends(get_db)):
     # Get real IP from request in production
     ip = f"{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}"
-    blocked_ip = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).first()
+    blocked_ip = db.query(IPList).filter(IPList.ip_address == ip).first()
     return {"ip": ip, "is_blocked": blocked_ip.is_blocked if blocked_ip else False}
 
 @app.get("/")
