@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from models import Base, TextMessage
 import random
 
-app = FastAPI()
+app = FastAPI(title="Anomal.AI")
 
 # Get database URL from environment variable
 DATABASE_URL = getenv("DATABASE_URL")
