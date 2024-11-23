@@ -11,6 +11,7 @@ from .api.endpoints import text
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from .api.dependencies import get_client_ip
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -43,16 +44,16 @@ async def options_handler(request: Request):
 
 @app.get("/is_blocked")
 async def is_blocked(request: Request, db: Session = Depends(get_db)):
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        ip = forwarded_for.split(",")[0].strip()
-    else:
-        ip = request.client.host
+    ip, domain = get_client_ip(request)
     
-    blocked_ip = db.query(IPList).filter(IPList.ip_address == str(ip)).first()
+    blocked_ip = db.query(IPList).filter(
+        IPList.ip_address == str(ip),
+        IPList.domain == domain
+    ).first()
     
     return {
         "ip": ip,
+        "domain": domain,
         "is_blocked": blocked_ip.is_blocked if blocked_ip else False
     }
 
