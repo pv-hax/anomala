@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from os import getenv
 from pydantic import BaseModel
 from .models import Base, TextMessage, IPList, Customer
-from .core.database import get_db, engine  # Move database setup to core/database.py
-from .api.endpoints import text  # Import the text router
+from .core.database import get_db, engine 
+from .api.endpoints import text  
 import random
 import logging
 
