@@ -8,11 +8,20 @@ from .core.database import get_db, engine
 from .api.endpoints import text  
 import random
 import logging
+from fastapi.middleware.cors import CORSMiddleware
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Anomal.AI")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Include the text router
 app.include_router(text.router, prefix="/api")
