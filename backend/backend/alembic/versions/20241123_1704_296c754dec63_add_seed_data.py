@@ -12,10 +12,6 @@ import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 from datetime import datetime
 
-# revision identifiers
-revision = 'your_revision_id'  # You'll get this from the file name
-down_revision = 'your_initial_migration_id'  # Get this from your initial migration
-
 # revision identifiers, used by Alembic.
 revision: str = '296c754dec63'
 down_revision: Union[str, None] = 'c530704aecd8'
