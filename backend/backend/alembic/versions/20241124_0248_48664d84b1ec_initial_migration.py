@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: adcb321513ca
+Revision ID: 48664d84b1ec
 Revises: 
-Create Date: 2024-11-24 02:26:46.030387
+Create Date: 2024-11-24 02:48:58.024240
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'adcb321513ca'
+revision: str = '48664d84b1ec'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,7 +33,6 @@ def upgrade() -> None:
     sa.Column('ip_address', sa.String(length=255), nullable=False),
     sa.Column('is_blocked', sa.Boolean(), nullable=True),
     sa.Column('domain', sa.String(length=255), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_ip_lists_id'), 'ip_lists', ['id'], unique=False)
@@ -45,7 +44,6 @@ def upgrade() -> None:
     sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('confidence_score', sa.Float(), nullable=True),
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_local_storage_id'), 'local_storage', ['id'], unique=False)
@@ -60,7 +58,6 @@ def upgrade() -> None:
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_mouse_events_id'), 'mouse_events', ['id'], unique=False)
@@ -77,7 +74,6 @@ def upgrade() -> None:
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_network_events_id'), 'network_events', ['id'], unique=False)
@@ -92,7 +88,6 @@ def upgrade() -> None:
     sa.Column('confidence_score', sa.Float(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('blocked_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_text_messages_id'), 'text_messages', ['id'], unique=False)

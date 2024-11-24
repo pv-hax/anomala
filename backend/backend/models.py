@@ -18,13 +18,13 @@ class IPList(Base):
     id = Column(Integer, primary_key=True, index=True)
     ip_address = Column(String(255), nullable=False)
     is_blocked = Column(Boolean, default=False)
-    domain = Column(String(255), ForeignKey("customers.domain", ondelete='CASCADE'), nullable=True)
+    domain = Column(String(255), nullable=True)
 
 class TextMessage(Base):
     __tablename__ = "text_messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    domain = Column(String(255), ForeignKey("customers.domain", ondelete='CASCADE'), nullable=True)
+    domain = Column(String(255), nullable=True)
     ip_address = Column(String(255), nullable=False)
     message = Column(String(1000), nullable=False)
     type = Column(String(255), nullable=False)
@@ -38,7 +38,7 @@ class MouseEvent(Base):
     __tablename__ = "mouse_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    domain = Column(String(255), ForeignKey("customers.domain", ondelete='CASCADE'), nullable=True)
+    domain = Column(String(255), nullable=True)
     ip_address = Column(String(255), nullable=False)
     x = Column(Integer, nullable=False)
     y = Column(Integer, nullable=False)
@@ -52,7 +52,7 @@ class NetworkEvent(Base):
     __tablename__ = "network_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    domain = Column(String(255), ForeignKey("customers.domain", ondelete='CASCADE'), nullable=True)
+    domain = Column(String(255), nullable=True)
     ip_address = Column(String(255), nullable=False)
     headers = Column(JSON, nullable=False)
     method = Column(String(255), nullable=False)
@@ -68,7 +68,7 @@ class LocalStorage(Base):
     __tablename__ = "local_storage"
 
     id = Column(Integer, primary_key=True, index=True)
-    domain = Column(String(255), ForeignKey("customers.domain", ondelete='CASCADE'), nullable=True)
+    domain = Column(String(255), nullable=True)
     content = Column(JSON, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     blocked_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

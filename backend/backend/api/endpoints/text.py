@@ -17,22 +17,22 @@ llm_service = LLMService()
 
 
 async def process_text_with_llm(
-    db: Session, event_id: int, text: str, ip: int, domain: str
+    db: Session, event_id: int, text: str, ip: str, domain: str
 ):
     """Background task to process text with OpenAI"""
     try:
         result = await llm_service.analyze_text(event_id, text, ip, domain)
         
-        # Use with statement for better transaction management
         with db.begin():
             event = db.query(TextMessage).filter(TextMessage.id == event_id).first()
             if not event:
                 logger.error(f"Event {event_id} not found")
                 return
-                
+            
             event.is_malicious = result["is_malicious"]
             event.type = result["type"]
-
+            event.confidence_score = result["confidence_score"]
+            
             if result["is_malicious"]:
                 logger.info(f"Malicious text detected: {text} for IP: {ip} and domain: {domain}")
                 ip_entry = (
@@ -42,9 +42,7 @@ async def process_text_with_llm(
                 )
                 
                 logger.info(f"blocking event: {event}")
-                
-                event.blocked = True
-                
+                event.caused_block = True
                 logger.info(f"event blocked: {event}")
                 
                 if ip_entry:
@@ -96,9 +94,9 @@ async def create_text_event(
                 type=event.type,
             )
             db.add(text_event)
-            db.flush()  # Use flush to get the ID without committing
+            db.flush()
 
-            # Add background task
+            # Update background task call to remove extra parameters
             background_tasks.add_task(
                 process_text_with_llm,
                 db,
@@ -106,8 +104,6 @@ async def create_text_event(
                 event.message,
                 ip,
                 domain,
-                event.type,
-                event.confidence_score
             )
 
             return {"status": "success", "id": text_event.id}

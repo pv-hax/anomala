@@ -63,14 +63,14 @@ async def is_blocked(request: Request, db: Session = Depends(get_db)):
             customer = Customer(domain=domain)
             db.add(customer)
             db.flush()
-
+    
         logger.info(f"Checking IP: {ip}, Domain: {domain}")
         ip_blocked = (
             db.query(IPList)
             .filter(IPList.ip_address == ip, IPList.is_blocked == True)
             .first()
         )
-
+    
     if ip_blocked:
         logger.info(f"IP blocked: {ip_blocked}")
         raise HTTPException(status_code=403, detail="IP is blocked")
@@ -114,7 +114,7 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     logs = [
         AttackLog(
             ip=message.ip_address,
-            type_of_attack="sqlinjection",  # Since we're only dealing with TextMessage
+            type_of_attack=message.type,
             timestamp=message.created_at,
             blocked=message.caused_block if message.caused_block is not None else False,
         )
