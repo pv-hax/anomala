@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 
-export default function LogsTable({ logs }) {
+const LoadingCircle = ({ isUpdated }) => (
+    <div className="ml-2 inline-block w-4 h-4 relative">
+        <div className={`
+            absolute w-4 h-4 border-2 rounded-full animate-spin
+            transition-colors duration-300
+            ${isUpdated ? 'border-[#00ff94] border-t-transparent' : 'border-gray-400 border-t-transparent'}
+        `} />
+    </div>
+);
+
+export default function LogsTable({ logs, lastUpdate }) {
     const [sortConfig, setSortConfig] = useState({
         key: 'timestamp',
         direction: 'desc'
     });
     const [sortedLogs, setSortedLogs] = useState(logs);
+    const [isUpdated, setIsUpdated] = useState(false);
 
     // Sort function
     const sortLogs = (key) => {
@@ -35,6 +46,12 @@ export default function LogsTable({ logs }) {
         setSortedLogs(logs);
     }, [logs]);
 
+    useEffect(() => {
+        setIsUpdated(true);
+        const timer = setTimeout(() => setIsUpdated(false), 300);
+        return () => clearTimeout(timer);
+    }, [lastUpdate]);
+
     // Sort indicator component
     const SortIndicator = ({ columnKey }) => {
         if (sortConfig.key !== columnKey) return <span className="ml-1">↕</span>;
@@ -61,8 +78,17 @@ export default function LogsTable({ logs }) {
                 <div className="absolute inset-0 bg-gradient-to-bl from-white via-transparent to-transparent opacity-[0.03]" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-white/10 to-transparent opacity-[0.08]" />
             </div>
-            <div className="relative z-10 p-6 border-b border-white/10">
+            <div className="relative z-10 p-6 border-b border-white/10 flex justify-between items-center">
                 <h2 className="font-inter font-light text-2xl text-white mb-2">Logs</h2>
+                <div className="flex items-center">
+                    <span className={`
+                        text-sm transition-colors duration-300
+                        ${isUpdated ? 'text-[#00ff94]' : 'text-gray-400'}
+                    `}>
+                        {new Date(lastUpdate).toLocaleTimeString()}
+                    </span>
+                    <LoadingCircle isUpdated={isUpdated} />
+                </div>
             </div>
             <div className="relative z-10 overflow-x-auto">
                 <table className="min-w-full divide-y divide-white/10">
@@ -143,10 +169,10 @@ export default function LogsTable({ logs }) {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     <div className="flex items-center">
                                         <div className={`w-3 h-3 rounded-full mr-2 ${log.confidence_score >= 0.66
-                                                ? 'bg-[#00ff94]'
-                                                : log.confidence_score >= 0.33
-                                                    ? 'bg-yellow-400'
-                                                    : 'bg-red-500'
+                                            ? 'bg-[#00ff94]'
+                                            : log.confidence_score >= 0.33
+                                                ? 'bg-yellow-400'
+                                                : 'bg-red-500'
                                             }`} />
                                         <span className="text-gray-300">
                                             {Math.round(log.confidence_score * 100)}%
