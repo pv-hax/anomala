@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from typing import List
 from .models import Base, TextMessage, IPList, Customer
 from .core.database import get_db, engine
-from .api.endpoints import text
+from .api.endpoints import text, localStorage
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -37,6 +37,8 @@ app.add_middleware(
 )
 
 app.include_router(text.router, prefix="/api")
+app.include_router(localStorage.router, prefix="/api")
+
 
 
 @app.options("/{full_path:path}")
