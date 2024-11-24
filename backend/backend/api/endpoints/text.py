@@ -40,6 +40,10 @@ async def process_text_with_llm(
                     .filter(IPList.ip_address == ip, IPList.domain == domain)
                     .first()
                 )
+                
+                event.blocked = True
+                
+                
                 if ip_entry:
                     ip_entry.is_blocked = True
 
