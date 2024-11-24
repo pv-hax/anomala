@@ -266,7 +266,7 @@ async def save_html(request: Request):
         file.write(html_template)
 
     bucket_name = "replays-test-pv-hack"
-    object_name = "replay.html"
+    object_name = "test-replay/replay.html"
 
     try:
         s3_client.upload_file(file_path, bucket_name, object_name)
