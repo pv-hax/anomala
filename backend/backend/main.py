@@ -234,8 +234,10 @@ async def save_html(request: Request):
         endpoint_url=CF_S3_ENDPOINT,
     )
 
-    print(content)
-    for event in content["events"]:
+    content_str = content.decode("utf-8")
+    content_dict = json.loads(content_str)
+
+    for event in content_dict["events"]:
         parsed_data += json.dumps(event) + ","
 
     html_template = f"""<!DOCTYPE html>
