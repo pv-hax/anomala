@@ -11,6 +11,7 @@ Function to track all form submissions
 document.addEventListener("DOMContentLoaded", function () {
   const forms = document.querySelectorAll("form");
 
+
   // Select every single form
   forms.forEach((form) => {
     const inputs = form.querySelectorAll("input, textarea");
@@ -31,6 +32,32 @@ document.addEventListener("DOMContentLoaded", function () {
         // Print the JSON object
         sendData("/api/text", data);
       });
+    });
+  });
+});
+
+const forms = document.querySelectorAll("form");
+
+
+// Select every single form
+forms.forEach((form) => {
+  const inputs = form.querySelectorAll("input, textarea");
+
+  // Select every single input
+  inputs.forEach((input) => {
+
+    // Activate on unfocus
+    input.addEventListener("blur", function () {
+
+      // Find the label and the content
+      const label = form.querySelector(`label[for="${input.id}"]`);
+      const data = {
+        type: label ? label.textContent : "None",
+        message: input.value,
+      };
+
+      // Print the JSON object
+      sendData("/api/text", data);
     });
   });
 });
