@@ -39,7 +39,7 @@ export default function StatsCard({ stats }) {
                     <div className="flex justify-between mt-2 text-xs">
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/80 mr-2" />
-                            <span className="text-gray-400">SQL ({stats.types_of_attacks.sqlinjection}%)</span>
+                            <span className="text-gray-400">SQL ({stats.types_of_attacks.sql_injection}%)</span>
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/50 mr-2" />
@@ -47,11 +47,11 @@ export default function StatsCard({ stats }) {
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/20 mr-2" />
-                            <span className="text-gray-400">Bruteforce ({stats.types_of_attacks.bruteforce}%)</span>
+                            <span className="text-gray-400">Bruteforce ({stats.types_of_attacks.phishing}%)</span>
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/10 mr-2" />
-                            <span className="text-gray-400">DDoS ({stats.types_of_attacks.ddos}%)</span>
+                            <span className="text-gray-400">DDoS ({stats.types_of_attacks.unknown}%)</span>
                         </div>
                     </div>
                 </div>
