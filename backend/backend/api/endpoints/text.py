@@ -37,7 +37,7 @@ async def process_text_with_llm(
                 logger.info(f"Malicious text detected: {text} for IP: {ip} and domain: {domain}")
                 ip_entry = (
                     db.query(IPList)
-                    .filter(IPList.ip_address == ip, IPList.domain == domain)
+                    .filter(IPList.ip_address == ip)
                     .first()
                 )
                 
