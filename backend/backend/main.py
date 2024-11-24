@@ -137,6 +137,8 @@ async def unban_all(db: Session = Depends(get_db)):
 class AttackStats(BaseModel):
     total_attacks: int
     types_of_attacks: Dict[str, int]
+    average_malicious_confidence: float
+    total_blocked: int
 
 
 @app.get("/stats", response_model=AttackStats)
@@ -164,8 +166,12 @@ async def get_attack_stats(db: Session = Depends(get_db)):
         or 0.0
     )
 
+    # Get total number of blocked attacks
+    total_blocked = db.query(TextMessage).filter(TextMessage.caused_block == True).count()
+
     return AttackStats(
         total_attacks=total_attacks,
         types_of_attacks=types_of_attacks,
         average_malicious_confidence=round(avg_malicious_confidence, 2),
+        total_blocked=total_blocked
     )
