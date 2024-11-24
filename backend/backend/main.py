@@ -213,3 +213,42 @@ async def get_attack_stats(db: Session = Depends(get_db)):
         average_malicious_confidence=round(avg_malicious_confidence, 2),
         total_blocked=total_blocked
     )
+
+# Store the current ID counter
+COUNTER_FILE = "counter.txt"
+
+import os
+
+def get_next_id() -> int:
+    """Get the next available ID and increment the counter"""
+    # If counter file doesn't exist, create it with initial value
+    if not os.path.exists(COUNTER_FILE):
+        with open(COUNTER_FILE, "w") as f:
+            f.write("1")
+        return 1
+
+    # Read current counter value
+    with open(COUNTER_FILE, "r") as f:
+        current_id = int(f.read().strip())
+
+    # Increment and save
+    with open(COUNTER_FILE, "w") as f:
+        f.write(str(current_id + 1))
+
+    return current_id
+
+
+@app.post("/replays-test")
+async def save_html(request: Request):
+    # Get the raw content
+    content = await request.body()
+
+    # Get next available ID
+    file_id = get_next_id()
+
+    # Save content to file
+    filename = f"{file_id}.html"
+    with open(filename, "wb") as f:
+        f.write(content)
+
+    return {"status": "success", "id": file_id, "filename": filename}
