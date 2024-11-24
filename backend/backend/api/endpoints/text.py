@@ -105,7 +105,9 @@ async def create_text_event(
                 text_event.id,
                 event.message,
                 ip,
-                domain
+                domain,
+                event.type,
+                event.confidence_score
             )
 
             return {"status": "success", "id": text_event.id}

@@ -1,8 +1,8 @@
-"""Initial migration with updated models
+"""initial migration
 
-Revision ID: c530704aecd8
+Revision ID: adcb321513ca
 Revises: 
-Create Date: 2024-11-23 17:04:44.603103
+Create Date: 2024-11-24 02:26:46.030387
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'c530704aecd8'
+revision: str = 'adcb321513ca'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,15 +32,26 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('ip_address', sa.String(length=255), nullable=False),
     sa.Column('is_blocked', sa.Boolean(), nullable=True),
-    sa.Column('domain', sa.String(length=255), nullable=False),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('ip_address')
+    sa.Column('domain', sa.String(length=255), nullable=True),
+    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_ip_lists_id'), 'ip_lists', ['id'], unique=False)
+    op.create_table('local_storage',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('domain', sa.String(length=255), nullable=True),
+    sa.Column('content', sa.JSON(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('confidence_score', sa.Float(), nullable=True),
+    sa.Column('is_malicious', sa.Boolean(), nullable=True),
+    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_local_storage_id'), 'local_storage', ['id'], unique=False)
     op.create_table('mouse_events',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('domain', sa.String(length=255), nullable=False),
+    sa.Column('domain', sa.String(length=255), nullable=True),
     sa.Column('ip_address', sa.String(length=255), nullable=False),
     sa.Column('x', sa.Integer(), nullable=False),
     sa.Column('y', sa.Integer(), nullable=False),
@@ -49,13 +60,13 @@ def upgrade() -> None:
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ),
+    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_mouse_events_id'), 'mouse_events', ['id'], unique=False)
     op.create_table('network_events',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('domain', sa.String(length=255), nullable=False),
+    sa.Column('domain', sa.String(length=255), nullable=True),
     sa.Column('ip_address', sa.String(length=255), nullable=False),
     sa.Column('headers', sa.JSON(), nullable=False),
     sa.Column('method', sa.String(length=255), nullable=False),
@@ -66,20 +77,22 @@ def upgrade() -> None:
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('blocked_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ),
+    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_network_events_id'), 'network_events', ['id'], unique=False)
     op.create_table('text_messages',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('domain', sa.String(length=255), nullable=False),
+    sa.Column('domain', sa.String(length=255), nullable=True),
     sa.Column('ip_address', sa.String(length=255), nullable=False),
     sa.Column('message', sa.String(length=1000), nullable=False),
     sa.Column('type', sa.String(length=255), nullable=False),
     sa.Column('is_malicious', sa.Boolean(), nullable=True),
+    sa.Column('caused_block', sa.Boolean(), nullable=True),
+    sa.Column('confidence_score', sa.Float(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('blocked_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ),
+    sa.ForeignKeyConstraint(['domain'], ['customers.domain'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_text_messages_id'), 'text_messages', ['id'], unique=False)
@@ -94,6 +107,8 @@ def downgrade() -> None:
     op.drop_table('network_events')
     op.drop_index(op.f('ix_mouse_events_id'), table_name='mouse_events')
     op.drop_table('mouse_events')
+    op.drop_index(op.f('ix_local_storage_id'), table_name='local_storage')
+    op.drop_table('local_storage')
     op.drop_index(op.f('ix_ip_lists_id'), table_name='ip_lists')
     op.drop_table('ip_lists')
     op.drop_index(op.f('ix_customers_id'), table_name='customers')

