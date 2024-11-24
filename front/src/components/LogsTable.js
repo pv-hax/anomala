@@ -43,7 +43,7 @@ export default function LogsTable({ logs }) {
 
     const handleUnban = async (ip) => {
         try {
-            const response = await fetch('http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/unban-all', {
+            const response = await fetch('https://backend.anomala.cc/unban-all', {
                 method: 'POST',
             });
             if (!response.ok) throw new Error('Failed to unban IP');
