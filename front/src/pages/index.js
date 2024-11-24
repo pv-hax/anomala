@@ -54,7 +54,7 @@ export default function Home({ initialLogs, initialStats }) {
     try {
       const response = await fetch('/api/stats');
       const data = await response.json();
-      setStats(data.stats);
+      setStats(data);
     } catch (error) {
       console.error('Error fetching sample stats:', error);
     }
