@@ -64,11 +64,11 @@ export default function StatsCard({ stats }) {
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/20 mr-2" />
-                            <span className="text-gray-400">Bruteforce ({attackPercentages.phishing}%)</span>
+                            <span className="text-gray-400">Phishing ({attackPercentages.phishing}%)</span>
                         </div>
                         <div className="flex items-center">
                             <div className="w-2 h-2 rounded-full bg-[#00ff94]/10 mr-2" />
-                            <span className="text-gray-400">DDoS ({attackPercentages.unknown}%)</span>
+                            <span className="text-gray-400">Unknown ({attackPercentages.unknown}%)</span>
                         </div>
                     </div>
                 </div>
