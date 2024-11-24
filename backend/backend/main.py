@@ -140,8 +140,7 @@ async def get_attack_logs(db: Session = Depends(get_db)):
             ip=message.ip_address,
             type_of_attack="localStorage",
             timestamp=message.created_at,
-            blocked=message.blocked_at
-            is not None,  # Use blocked_at to determine if it was blocked
+            blocked=message.blocked_at is not None,  # Use blocked_at to determine if it was blocked
             confidence_score=message.confidence_score,  # Use the actual confidence score
             is_malicious=message.is_malicious,  # Add is_malicious flag
             is_local_storage=True,
