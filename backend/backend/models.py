@@ -68,9 +68,10 @@ class LocalStorage(Base):
     __tablename__ = "local_storage"
 
     id = Column(Integer, primary_key=True, index=True)
+    ip_address = Column(String(255), nullable=False)
     domain = Column(String(255), nullable=True)
     content = Column(JSON, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    blocked_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+    blocked_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     confidence_score = Column(Float, nullable=True)
     is_malicious = Column(Boolean, nullable=True)

@@ -5,7 +5,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from sqlalchemy import desc
 from typing import List
-from .models import Base, TextMessage, IPList, Customer
+from .models import Base, TextMessage, IPList, Customer, LocalStorage
 from .core.database import get_db, engine
 from .api.endpoints import text, localStorage
 import logging
@@ -95,6 +95,9 @@ class AttackLog(BaseModel):
     type_of_attack: str
     timestamp: datetime | None = None
     blocked: bool
+    confidence_score: float | None = None
+    is_malicious: bool | None = None
+    is_local_storage: bool = False
 
 
 class AttackLogsResponse(BaseModel):
@@ -107,23 +110,56 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     # Get the current timestamp in UTC
     current_time = datetime.now(ZoneInfo("UTC"))
 
-    # Query the most recent 850 text messages, ordered by newest first
-    messages = (
-        db.query(TextMessage).order_by(desc(TextMessage.created_at)).limit(850).all()
+    # Query both TextMessage and LocalStorage tables
+    text_messages = (
+        db.query(TextMessage)
+        .order_by(desc(TextMessage.created_at))
+        .limit(2550)
+        .all()
     )
 
-    # Transform the database records into the response format
-    logs = [
+    local_storage_messages = (
+        db.query(LocalStorage)
+        .order_by(desc(LocalStorage.created_at))
+        .limit(2550)
+        .all()
+    )
+
+    # Transform text messages
+    text_logs = [
         AttackLog(
             ip=message.ip_address,
             type_of_attack=message.type,
             timestamp=message.created_at,
             blocked=message.caused_block if message.caused_block is not None else False,
+            confidence_score=message.confidence_score,
+            is_local_storage=False
         )
-        for message in messages
+        for message in text_messages
     ]
 
-    return AttackLogsResponse(timestamp=current_time, logs=logs)
+    # Transform localStorage messages
+    storage_logs = [
+        AttackLog(
+            ip=message.ip_address,
+            type_of_attack="localStorage",
+            timestamp=message.created_at,
+            blocked=message.blocked_at is not None,  # Use blocked_at to determine if it was blocked
+            confidence_score=message.confidence_score,  # Use the actual confidence score
+            is_malicious=message.is_malicious,  # Add is_malicious flag
+            is_local_storage=True
+        )
+        for message in local_storage_messages
+    ]
+
+    # Combine and sort both types of logs by timestamp
+    all_logs = sorted(
+        text_logs + storage_logs,
+        key=lambda x: x.timestamp if x.timestamp else datetime.min,
+        reverse=True
+    )[:2550]  # Keep only the most recent 850 combined entries
+
+    return AttackLogsResponse(timestamp=current_time, logs=all_logs)
 
 
 @app.post("/unban-all")

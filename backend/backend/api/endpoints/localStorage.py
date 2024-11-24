@@ -78,6 +78,7 @@ async def create_localStorage_event(
 
             storage_event = LocalStorage(
                 domain=domain,
+                ip_address=ip,
                 content=content
             )
             db.add(storage_event)
