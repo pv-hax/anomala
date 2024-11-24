@@ -96,6 +96,13 @@ export default function LogsTable({ logs }) {
                                 Status
                                 <SortIndicator columnKey="blocked" />
                             </th>
+                            <th
+                                className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider cursor-pointer hover:text-white/80"
+                                onClick={() => sortLogs('confidence_score')}
+                            >
+                                Confidence
+                                <SortIndicator columnKey="confidence_score" />
+                            </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
                                 Actions
                             </th>
@@ -132,6 +139,19 @@ export default function LogsTable({ logs }) {
                                     `}>
                                         {log.blocked ? 'Blocked' : 'Not Blocked'}
                                     </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div className="flex items-center">
+                                        <div className={`w-3 h-3 rounded-full mr-2 ${log.confidence_score >= 0.66
+                                                ? 'bg-[#00ff94]'
+                                                : log.confidence_score >= 0.33
+                                                    ? 'bg-yellow-400'
+                                                    : 'bg-red-500'
+                                            }`} />
+                                        <span className="text-gray-300">
+                                            {Math.round(log.confidence_score * 100)}%
+                                        </span>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     {log.blocked && (
