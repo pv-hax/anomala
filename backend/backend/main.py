@@ -17,6 +17,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Dict
 from pydantic import BaseModel
+import json
+from os import getenv
+import boto3
 
 
 logging.basicConfig(
@@ -38,7 +41,6 @@ app.add_middleware(
 
 app.include_router(text.router, prefix="/api")
 app.include_router(localStorage.router, prefix="/api")
-
 
 
 @app.options("/{full_path:path}")
@@ -65,14 +67,14 @@ async def is_blocked(request: Request, db: Session = Depends(get_db)):
             customer = Customer(domain=domain)
             db.add(customer)
             db.flush()
-    
+
         logger.info(f"Checking IP: {ip}, Domain: {domain}")
         ip_blocked = (
             db.query(IPList)
             .filter(IPList.ip_address == ip, IPList.is_blocked == True)
             .first()
         )
-    
+
     if ip_blocked:
         logger.info(f"IP blocked: {ip_blocked}")
         raise HTTPException(status_code=403, detail="IP is blocked")
@@ -112,17 +114,11 @@ async def get_attack_logs(db: Session = Depends(get_db)):
 
     # Query both TextMessage and LocalStorage tables
     text_messages = (
-        db.query(TextMessage)
-        .order_by(desc(TextMessage.created_at))
-        .limit(2550)
-        .all()
+        db.query(TextMessage).order_by(desc(TextMessage.created_at)).limit(2550).all()
     )
 
     local_storage_messages = (
-        db.query(LocalStorage)
-        .order_by(desc(LocalStorage.created_at))
-        .limit(2550)
-        .all()
+        db.query(LocalStorage).order_by(desc(LocalStorage.created_at)).limit(2550).all()
     )
 
     # Transform text messages
@@ -133,7 +129,7 @@ async def get_attack_logs(db: Session = Depends(get_db)):
             timestamp=message.created_at,
             blocked=message.caused_block if message.caused_block is not None else False,
             confidence_score=message.confidence_score,
-            is_local_storage=False
+            is_local_storage=False,
         )
         for message in text_messages
     ]
@@ -144,10 +140,11 @@ async def get_attack_logs(db: Session = Depends(get_db)):
             ip=message.ip_address,
             type_of_attack="localStorage",
             timestamp=message.created_at,
-            blocked=message.blocked_at is not None,  # Use blocked_at to determine if it was blocked
+            blocked=message.blocked_at
+            is not None,  # Use blocked_at to determine if it was blocked
             confidence_score=message.confidence_score,  # Use the actual confidence score
             is_malicious=message.is_malicious,  # Add is_malicious flag
-            is_local_storage=True
+            is_local_storage=True,
         )
         for message in local_storage_messages
     ]
@@ -156,8 +153,10 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     all_logs = sorted(
         text_logs + storage_logs,
         key=lambda x: x.timestamp if x.timestamp else datetime.min,
-        reverse=True
-    )[:2550]  # Keep only the most recent 850 combined entries
+        reverse=True,
+    )[
+        :2550
+    ]  # Keep only the most recent 850 combined entries
 
     return AttackLogsResponse(timestamp=current_time, logs=all_logs)
 
@@ -205,50 +204,71 @@ async def get_attack_stats(db: Session = Depends(get_db)):
     )
 
     # Get total number of blocked attacks
-    total_blocked = db.query(TextMessage).filter(TextMessage.caused_block == True).count()
+    total_blocked = (
+        db.query(TextMessage).filter(TextMessage.caused_block == True).count()
+    )
 
     return AttackStats(
         total_attacks=total_attacks,
         types_of_attacks=types_of_attacks,
         average_malicious_confidence=round(avg_malicious_confidence, 2),
-        total_blocked=total_blocked
+        total_blocked=total_blocked,
     )
-
-# Store the current ID counter
-COUNTER_FILE = "counter.txt"
-
-import os
-
-def get_next_id() -> int:
-    """Get the next available ID and increment the counter"""
-    # If counter file doesn't exist, create it with initial value
-    if not os.path.exists(COUNTER_FILE):
-        with open(COUNTER_FILE, "w") as f:
-            f.write("1")
-        return 1
-
-    # Read current counter value
-    with open(COUNTER_FILE, "r") as f:
-        current_id = int(f.read().strip())
-
-    # Increment and save
-    with open(COUNTER_FILE, "w") as f:
-        f.write(str(current_id + 1))
-
-    return current_id
 
 
 @app.post("/replays-test")
 async def save_html(request: Request):
-    # Get the raw content
+
     content = await request.body()
+    parsed_data = ""
 
-    # Get next available ID
-    file_id = get_next_id()
+    CF_TOKEN = getenv("CF_TOKEN")
+    CF_ACCESS_ID = getenv("CF_ACCESS_ID")
+    CF_SECRET_ACCESS_KEY = getenv("CF_SECRET_ACCESS_KEY")
+    CF_S3_ENDPOINT = getenv("CF_S3_ENDPOINT")
 
-    # Save content to file
-    filename = f"{file_id}.html"
-    with open(filename, "wb") as f:
-        f.write(content)
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=CF_ACCESS_ID,
+        aws_secret_access_key=CF_SECRET_ACCESS_KEY,
+        endpoint_url=CF_S3_ENDPOINT,
+    )
 
-    return {"status": "success", "id": file_id, "filename": filename}
+    for event in content["events"]:
+        parsed_data += json.dumps(event) + ","
+
+    html_template = f"""<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Recording @IP</title>
+    <link rel="stylesheet" href="../dist/style.css" />
+  </head>
+  <body>
+    <script src="../dist/rrweb.umd.cjs"></script>
+    <script>
+      const events = [{parsed_data}];
+      const replayer = new rrweb.Replayer(events, {{
+        UNSAFE_replayCanvas: true,
+      }});
+      replayer.play();
+    </script>
+  </body>
+</html>"""
+
+    file_path = "/tmp/replay.html"
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(html_template)
+
+    bucket_name = "replays-test-pv-hack"
+    object_name = "replay.html"
+
+    try:
+        s3_client.upload_file(file_path, bucket_name, object_name)
+        print(f"File uploaded successfully to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Error uploading file: {e}")
+
+    return {"status": "success", "id": 1}
