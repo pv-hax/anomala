@@ -41,8 +41,11 @@ async def process_text_with_llm(
                     .first()
                 )
                 
+                logger.info(f"blocking event: {event}")
+                
                 event.blocked = True
                 
+                logger.info(f"event blocked: {event}")
                 
                 if ip_entry:
                     ip_entry.is_blocked = True
