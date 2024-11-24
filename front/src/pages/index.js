@@ -38,6 +38,33 @@ export default function Home({ initialLogs, initialStats }) {
   const [logs, setLogs] = useState(initialLogs);
   const [stats, setStats] = useState(initialStats);
   const [dataSource, setDataSource] = useState("live");
+  const [lastUpdate, setLastUpdate] = useState("");
+
+  useEffect(() => {
+    if (dataSource === "live") {
+      const fetchData = async () => {
+        try {
+          const [logsResponse, statsResponse] = await Promise.all([
+            fetch("https://backend.anomala.cc/attack-logs"),
+            fetch("https://backend.anomala.cc/stats")
+          ]);
+
+          const logsData = await logsResponse.json();
+          const statsData = await statsResponse.json();
+
+          setLogs(formatLogs(logsData.logs));
+          setStats(statsData);
+          setLastUpdate(logsData.timestamp);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      };
+
+      fetchData();
+      const interval = setInterval(fetchData, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [dataSource]);
 
   const fetchSampleLogs = async () => {
     try {
@@ -94,7 +121,7 @@ export default function Home({ initialLogs, initialStats }) {
             <AttackChart logs={logs} />
           </div>
         </div>
-        <LogsTable logs={logs} />
+        <LogsTable logs={logs} lastUpdate={lastUpdate} />
       </div>
     </div>
   );
