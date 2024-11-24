@@ -146,9 +146,12 @@ export default function LogsTable({ logs, lastUpdate }) {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">
-                                    <span className="text-gray-300">
+                                    <a
+                                        href={`/replay`}
+                                        className="text-gray-300 hover:text-[#00ff94] transition-colors duration-200"
+                                    >
                                         {log.ip}
-                                    </span>
+                                    </a>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     <span className="text-gray-300">
