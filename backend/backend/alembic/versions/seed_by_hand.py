@@ -1,7 +1,7 @@
 """Add attack simulation seed data
 Revision ID: 296c754dec69
-Revises: adcb321513ca
-Create Date: 2024-11-23 17:30:50.338468
+Revises: 48664d84b1ec
+Create Date: 2024-11-24 02:50:43.019195
 """
 
 from typing import Sequence, Union
@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 # revision identifiers, used by Alembic.
 revision: str = "296c754dec69"
-down_revision: Union[str, None] = "adcb321513ca"
+down_revision: Union[str, None] = "48664d84b1ec"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
