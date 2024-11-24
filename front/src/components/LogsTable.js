@@ -41,6 +41,19 @@ export default function LogsTable({ logs }) {
         return <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
     };
 
+    const handleUnban = async (ip) => {
+        try {
+            const response = await fetch('http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/unban-all', {
+                method: 'POST',
+            });
+            if (!response.ok) throw new Error('Failed to unban IP');
+            // You might want to add some success feedback here
+        } catch (error) {
+            console.error('Error unbanning IP:', error);
+            // You might want to add some error feedback here
+        }
+    };
+
     return (
         <div className="overflow-hidden rounded-xl relative border border-white/10 bg-black">
             <div className="absolute inset-0">
@@ -83,6 +96,9 @@ export default function LogsTable({ logs }) {
                                 Status
                                 <SortIndicator columnKey="blocked" />
                             </th>
+                            <th className="px-6 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10">
@@ -116,6 +132,16 @@ export default function LogsTable({ logs }) {
                                     `}>
                                         {log.blocked ? 'Blocked' : 'Not Blocked'}
                                     </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    {log.blocked && (
+                                        <button
+                                            onClick={() => handleUnban(log.ip)}
+                                            className="px-3 py-1 rounded-lg bg-red-900/30 text-red-200 border border-red-700/30 hover:bg-red-900/50 hover:border-red-700/50 transition-colors duration-200"
+                                        >
+                                            Unban
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
