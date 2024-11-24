@@ -1,7 +1,9 @@
 import LogsTable from "../components/LogsTable";
 import AttackChart from "../components/AttackChart";
 import TitleHeader from "../components/TitleHeader";
+import StatsCard from "../components/StatsCard";
 import { useState, useEffect } from "react";
+import Navbar from "../components/Navbar";
 
 // Helper to format dates consistently
 const formatLogs = (logs) => {
@@ -13,9 +15,11 @@ const formatLogs = (logs) => {
 };
 
 export const getServerSideProps = async () => {
-  const response = await fetch(
-    "http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/attack-logs"
-  );
+  //const response = await fetch(
+  //  "http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/attack-logs"
+  //);
+  const response = await fetch('http://localhost:3000/api/logs');
+
   const data = await response.json();
   const formattedLogs = formatLogs(data.logs);
 
@@ -50,6 +54,7 @@ export default function Home({ initialLogs }) {
 
   return (
     <div className="min-h-screen bg-[#000000] text-white">
+      <Navbar />
       <div className="container mx-auto p-6 space-y-6">
         <TitleHeader />
         <div className="flex justify-end mb-4">
@@ -60,7 +65,14 @@ export default function Home({ initialLogs }) {
             {dataSource === "live" ? "Switch to Sample Data" : "Switch to Live Data"}
           </button>
         </div>
-        <AttackChart logs={logs} />
+        <div className="space-y-6">
+          <div className="w-full">
+            <StatsCard />
+          </div>
+          <div className="w-full">
+            <AttackChart logs={logs} />
+          </div>
+        </div>
         <LogsTable logs={logs} />
       </div>
     </div>
