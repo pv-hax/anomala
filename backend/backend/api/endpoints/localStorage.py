@@ -15,8 +15,8 @@ llm_storage_service = LLMStorageService()
 
 class LocalStorageEventCreate(BaseModel):
     key: str
-    old_value: str
-    new_value: str
+    old_value: str | None = None
+    new_value: str | None = None
     timestamp: datetime
 
 async def process_storage_with_llm(
@@ -52,6 +52,8 @@ async def create_localStorage_event(
 ):
     try:
         ip, domain = get_client_ip(request, db=db)
+        logger.info(f"Received localStorage event from IP: {ip}, Domain: {domain}")
+        logger.info(f"Event data - Key: {event.key}, Old: {event.old_value}, New: {event.new_value}, Timestamp: {event.timestamp}")
         
         with db.begin():
             # Check for blocked IP
@@ -61,6 +63,7 @@ async def create_localStorage_event(
             ).first()
             
             if ip_blocked:
+                logger.warning(f"Blocked IP {ip} attempted to create localStorage event")
                 raise HTTPException(status_code=403, detail="IP is blocked")
 
             # Create content JSON
@@ -71,6 +74,7 @@ async def create_localStorage_event(
                     "timestamp": event.timestamp.isoformat()
                 }
             }
+            logger.debug(f"Created content payload: {content}")
 
             storage_event = LocalStorage(
                 domain=domain,
@@ -78,6 +82,7 @@ async def create_localStorage_event(
             )
             db.add(storage_event)
             db.flush()
+            logger.info(f"Created localStorage event with ID: {storage_event.id}")
 
             background_tasks.add_task(
                 process_storage_with_llm,
@@ -87,6 +92,7 @@ async def create_localStorage_event(
                 ip,
                 domain,
             )
+            logger.debug(f"Scheduled LLM analysis for event ID: {storage_event.id}")
 
             return {"status": "success", "id": storage_event.id}
 
