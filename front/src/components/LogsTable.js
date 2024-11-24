@@ -93,7 +93,7 @@ export default function LogsTable({ logs }) {
                             >
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                     <span className="text-gray-300">
-                                        {new Date(log.timestamp).toLocaleString()}
+                                        {log.formattedDate}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono">

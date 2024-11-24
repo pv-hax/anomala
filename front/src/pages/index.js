@@ -1,14 +1,14 @@
 import LogsTable from "../components/LogsTable";
 import AttackChart from "../components/AttackChart";
 import TitleHeader from "../components/TitleHeader";
-import { useState } from "react";
-import { GetServerSideProps } from "next";
+import { useState, useEffect } from "react";
 
 // Helper to format dates consistently
 const formatLogs = (logs) => {
   return logs.map((log) => ({
     ...log,
-    timestamp: new Date(log.timestamp).toISOString(), // Use ISO format to avoid locale mismatches
+    timestamp: new Date(log.timestamp).toISOString(),
+    formattedDate: new Date(log.timestamp).toUTCString()
   }));
 };
 
@@ -17,8 +17,6 @@ export const getServerSideProps = async () => {
     "http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/attack-logs"
   );
   const data = await response.json();
-
-  // Format logs on the server
   const formattedLogs = formatLogs(data.logs);
 
   return { props: { initialLogs: formattedLogs } };
@@ -26,10 +24,28 @@ export const getServerSideProps = async () => {
 
 export default function Home({ initialLogs }) {
   const [logs, setLogs] = useState(initialLogs);
-  const [dataSource, setDataSource] = useState("sample");
+  const [dataSource, setDataSource] = useState("live");
+
+  const fetchSampleLogs = async () => {
+    try {
+      const response = await fetch('/api/logs');
+      const data = await response.json();
+      const formattedLogs = formatLogs(data.logs);
+      setLogs(formattedLogs);
+    } catch (error) {
+      console.error('Error fetching sample logs:', error);
+    }
+  };
 
   const toggleDataSource = () => {
-    setDataSource((prev) => (prev === "sample" ? "api" : "sample"));
+    const newSource = dataSource === "live" ? "sample" : "live";
+    setDataSource(newSource);
+
+    if (newSource === "sample") {
+      fetchSampleLogs();
+    } else {
+      setLogs(initialLogs);
+    }
   };
 
   return (
@@ -41,7 +57,7 @@ export default function Home({ initialLogs }) {
             onClick={toggleDataSource}
             className="px-4 py-2 rounded-lg bg-[#00ff94] text-black font-medium hover:bg-[#00ff94]/90 transition-colors"
           >
-            {dataSource === "sample" ? "Switch to Live Data" : "Switch to Sample Data"}
+            {dataSource === "live" ? "Switch to Sample Data" : "Switch to Live Data"}
           </button>
         </div>
         <AttackChart logs={logs} />
