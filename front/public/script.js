@@ -68,7 +68,7 @@ window.addEventListener('storage', function (event) {
   };
 
   // Send the diff to the server
-  sendData('/api/localstorage', diff);
+  sendData('/api/localStorage', diff);
 });
 
 
