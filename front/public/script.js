@@ -95,50 +95,50 @@ function sendData(endpoint, data) {
 
 
 
-/*
-Function to track all mouse movements
-*/
-document.addEventListener("mousemove", function (event) {
-  // Create a JSON object
-  const data = {
-    x: event.clientX,
-    y: event.clientY,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    timestamp: new Date().toISOString(),
-  };
+// /*
+// Function to track all mouse movements
+// */
+// document.addEventListener("mousemove", function (event) {
+//   // Create a JSON object
+//   const data = {
+//     x: event.clientX,
+//     y: event.clientY,
+//     width: window.innerWidth,
+//     height: window.innerHeight,
+//     timestamp: new Date().toISOString(),
+//   };
 
-  // Print the JSON object to the console
-  console.log(JSON.stringify(data));
-  sendData("/api/mouse", data);
-});
+//   // Print the JSON object to the console
+//   console.log(JSON.stringify(data));
+//   sendData("/api/mouse", data);
+// });
 
-/*
-Function to track scrolling events
-*/
-document.addEventListener("scroll", function () {
-  const data = {
-    scrollX: window.scrollX,
-    scrollY: window.scrollY,
-    timestamp: new Date().toISOString(),
-  };
+// /*
+// Function to track scrolling events
+// */
+// document.addEventListener("scroll", function () {
+//   const data = {
+//     scrollX: window.scrollX,
+//     scrollY: window.scrollY,
+//     timestamp: new Date().toISOString(),
+//   };
 
-  console.log(JSON.stringify(data));
-  sendData("/api/scroll", data);
-});
+//   console.log(JSON.stringify(data));
+//   sendData("/api/scroll", data);
+// });
 
-// Function to track click events
-document.addEventListener("click", function (event) {
-  const data = {
-    clickX: event.clientX,
-    clickY: event.clientY,
-    target: event.target.tagName,
-    timestamp: new Date().toISOString(),
-  };
+// // Function to track click events
+// document.addEventListener("click", function (event) {
+//   const data = {
+//     clickX: event.clientX,
+//     clickY: event.clientY,
+//     target: event.target.tagName,
+//     timestamp: new Date().toISOString(),
+//   };
 
-  console.log(JSON.stringify(data));
-  sendData("/api/click", data);
-});
+//   console.log(JSON.stringify(data));
+//   sendData("/api/click", data);
+// });
 
 
 // // /*
