@@ -15,19 +15,28 @@ const formatLogs = (logs) => {
 };
 
 export const getServerSideProps = async () => {
-  //const response = await fetch(
-  //  "http://ec2-100-26-197-252.compute-1.amazonaws.com:8000/attack-logs"
-  //);
-  const response = await fetch('http://localhost:3000/api/logs');
+  const response = await fetch(
+    "https://backend.anomala.cc/attack-logs"
+  );
 
+  const statsResponse = await fetch(
+    "https://backend.anomala.cc/stats"
+  );
+
+
+  //const response = await fetch('http://localhost:3000/api/logs');
   const data = await response.json();
   const formattedLogs = formatLogs(data.logs);
 
-  return { props: { initialLogs: formattedLogs } };
+  //const statsResponse = await fetch('http://localhost:3000/api/stats');
+  const statsData = await statsResponse.json();
+
+  return { props: { initialLogs: formattedLogs, initialStats: statsData } };
 };
 
-export default function Home({ initialLogs }) {
+export default function Home({ initialLogs, initialStats }) {
   const [logs, setLogs] = useState(initialLogs);
+  const [stats, setStats] = useState(initialStats);
   const [dataSource, setDataSource] = useState("live");
 
   const fetchSampleLogs = async () => {
@@ -41,14 +50,26 @@ export default function Home({ initialLogs }) {
     }
   };
 
+  const fetchSampleStats = async () => {
+    try {
+      const response = await fetch('/api/stats');
+      const data = await response.json();
+      setStats(data.stats);
+    } catch (error) {
+      console.error('Error fetching sample stats:', error);
+    }
+  };
+
   const toggleDataSource = () => {
     const newSource = dataSource === "live" ? "sample" : "live";
     setDataSource(newSource);
 
     if (newSource === "sample") {
       fetchSampleLogs();
+      fetchSampleStats();
     } else {
       setLogs(initialLogs);
+      setStats(initialStats);
     }
   };
 
@@ -67,7 +88,7 @@ export default function Home({ initialLogs }) {
         </div>
         <div className="space-y-6">
           <div className="w-full">
-            <StatsCard />
+            <StatsCard stats={stats} />
           </div>
           <div className="w-full">
             <AttackChart logs={logs} />

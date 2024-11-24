@@ -1,14 +1,5 @@
-export default function StatsCard() {
-    const stats = {
-        total_attacks: 2847,
-        blocked_attacks: 1963,
-        types_of_attacks: {
-            sqlinjection: 45,
-            xss: 30,
-            bruteforce: 15,
-            ddos: 10
-        }
-    };
+export default function StatsCard({ stats }) {
+
 
     return (
         <div className="w-full p-6 rounded-xl relative overflow-hidden border border-white/10 backdrop-blur-md bg-[#121212]/80">
@@ -21,7 +12,7 @@ export default function StatsCard() {
 
                     <div>
                         <h3 className="text-sm text-gray-400 mb-2">Blocked Attacks</h3>
-                        <p className="font-inter font-light text-3xl text-white">{stats.blocked_attacks}</p>
+                        <p className="font-inter font-light text-3xl text-white">{stats.total_blocked}</p>
                     </div>
                 </div>
 
@@ -30,7 +21,7 @@ export default function StatsCard() {
                     <div className="flex h-4 rounded-full overflow-hidden bg-white/5">
                         <div
                             className="bg-[#00ff94]/80 transition-all duration-500"
-                            style={{ width: `${stats.types_of_attacks.sqlinjection}%` }}
+                            style={{ width: `${stats.types_of_attacks.sql_injection}%` }}
                         />
                         <div
                             className="bg-[#00ff94]/50 transition-all duration-500"
@@ -38,11 +29,11 @@ export default function StatsCard() {
                         />
                         <div
                             className="bg-[#00ff94]/20 transition-all duration-500"
-                            style={{ width: `${stats.types_of_attacks.bruteforce}%` }}
+                            style={{ width: `${stats.types_of_attacks.phishing}%` }}
                         />
                         <div
                             className="bg-[#00ff94]/10 transition-all duration-500"
-                            style={{ width: `${stats.types_of_attacks.ddos}%` }}
+                            style={{ width: `${stats.types_of_attacks.unknown}%` }}
                         />
                     </div>
                     <div className="flex justify-between mt-2 text-xs">
