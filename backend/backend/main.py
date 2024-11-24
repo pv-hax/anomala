@@ -6,8 +6,8 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import desc
 from typing import List
 from .models import Base, TextMessage, IPList, Customer
-from .core.database import get_db, engine 
-from .api.endpoints import text  
+from .core.database import get_db, engine
+from .api.endpoints import text
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,8 +22,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
     expose_headers=["*"],
     max_age=600,
 )
@@ -44,12 +44,12 @@ async def options_handler(request: Request):
 
 @app.get("/is_blocked")
 async def is_blocked(
-    request: Request, 
+    request: Request,
     db: Session = Depends(get_db)
 ):
     ip, domain = get_client_ip(request, db=db)
-    
-    
+
+
     with db.begin():
         # Check if domain exists
         customer = db.query(Customer).filter(Customer.domain == domain).first()
@@ -57,7 +57,7 @@ async def is_blocked(
             customer = Customer(domain=domain)
             db.add(customer)
             db.flush()
-    
+
         logger.info(f"Checking IP: {ip}, Domain: {domain}")
         ip_blocked = (
             db.query(IPList)
@@ -65,9 +65,9 @@ async def is_blocked(
                 IPList.ip_address == ip,
                 IPList.is_blocked == True
             )
-            .first()    
+            .first()
         )
-    
+
     if ip_blocked:
         logger.info(f"IP blocked: {ip_blocked}")
         raise HTTPException(status_code=403, detail="IP is blocked")
@@ -77,7 +77,7 @@ async def is_blocked(
         "domain": domain,
         "is_blocked": bool(ip_blocked)
     }
-    
+
 
 @app.get("/")
 async def read_root(db: Session = Depends(get_db)):
@@ -127,3 +127,10 @@ async def get_attack_logs(db: Session = Depends(get_db)):
         timestamp=current_time,
         logs=logs
     )
+
+@app.post("/unban-all")
+async def unban_all(db: Session = Depends(get_db)):
+    with db.begin():
+        db.query(IPList).filter(IPList.is_blocked == True).update({IPList.is_blocked: False})
+        db.flush()
+    return {"msg": "All IPs unbanned"}
