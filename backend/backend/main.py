@@ -44,12 +44,12 @@ async def options_handler(request: Request):
 
 @app.get("/is_blocked")
 async def is_blocked(
-    request: Request,
+    request: Request, 
     db: Session = Depends(get_db)
 ):
     ip, domain = get_client_ip(request, db=db)
-
-
+    
+    
     with db.begin():
         # Check if domain exists
         customer = db.query(Customer).filter(Customer.domain == domain).first()
@@ -57,7 +57,7 @@ async def is_blocked(
             customer = Customer(domain=domain)
             db.add(customer)
             db.flush()
-
+    
         logger.info(f"Checking IP: {ip}, Domain: {domain}")
         ip_blocked = (
             db.query(IPList)
@@ -65,9 +65,9 @@ async def is_blocked(
                 IPList.ip_address == ip,
                 IPList.is_blocked == True
             )
-            .first()
+            .first()    
         )
-
+    
     if ip_blocked:
         logger.info(f"IP blocked: {ip_blocked}")
         raise HTTPException(status_code=403, detail="IP is blocked")
@@ -77,6 +77,7 @@ async def is_blocked(
         "domain": domain,
         "is_blocked": bool(ip_blocked)
     }
+    
 
 
 @app.get("/")
@@ -116,7 +117,7 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     logs = [
         AttackLog(
             ip=message.ip_address,
-            type_of_attack="sqlinjection",  # Since we're only dealing with TextMessage
+            type_of_attack=message.type,
             timestamp=message.created_at,
             blocked=message.caused_block if message.caused_block is not None else False
         )
