@@ -62,8 +62,8 @@ if (!DEBUG) {
 window.addEventListener('storage', function (event) {
   const diff = {
     key: event.key,
-    oldValue: event.oldValue,
-    newValue: event.newValue,
+    old_value: event.oldValue,
+    new_value: event.newValue,
     timestamp: new Date().toISOString(),
   };
 
