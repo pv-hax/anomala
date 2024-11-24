@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from zoneinfo import ZoneInfo
 import random
+from enum import Enum
 from typing import List
 
 # Assuming your models are in a file called models.py
@@ -11,6 +12,28 @@ from models import Base, TextMessage, Customer
 DATABASE_URL = "postgresql://user:password@localhost/dbname"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+class AttackType(str, Enum):
+    SQL_INJECTION = "sql_injection"
+    XSS = "xss"
+    COMMAND_INJECTION = "command_injection"
+    PATH_TRAVERSAL = "path_traversal"
+    CSRF = "csrf"
+    LFI = "local_file_inclusion"
+    RFI = "remote_file_inclusion"
+    XXE_INJECTION = "xxe_injection"
+    SSRF = "ssrf"
+    LDAP_INJECTION = "ldap_injection"
+    CODE_INJECTION = "code_injection"
+    DOS = "denial_of_service"
+    BUFFER_OVERFLOW = "buffer_overflow"
+    HTTP_HEADER_INJECTION = "http_header_injection"
+    DIRECTORY_TRAVERSAL = "directory_traversal"
+    SESSION_FIXATION = "session_fixation"
+    CLICKJACKING = "clickjacking"
+    PHISHING = "phishing"
+    NORMAL = "normal"
+    UNKNOWN = "unknown"
 
 class AttackPatterns:
     SQL_INJECTION = [
@@ -131,7 +154,7 @@ def create_sample_messages(num_messages: int, domain: str) -> List[TextMessage]:
             domain=domain,
             ip_address=ip,
             message=message_text,
-            type="form_input",
+            type=random.choice(list(AttackType)).value,
             is_malicious=is_malicious,
             caused_block=caused_block,
             created_at=timestamp,

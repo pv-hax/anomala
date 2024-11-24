@@ -1,6 +1,6 @@
 """Add attack simulation seed data
 Revision ID: 296c754dec69
-Revises: 48664d84b1ec
+Revises: 81747df8dbf3
 Create Date: 2024-11-24 02:50:43.019195
 """
 
@@ -10,13 +10,36 @@ import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 from datetime import datetime, timedelta
 import random
+from enum import Enum
 from zoneinfo import ZoneInfo
 
 # revision identifiers, used by Alembic.
 revision: str = "296c754dec69"
-down_revision: Union[str, None] = "48664d84b1ec"
+down_revision: Union[str, None] = "81747df8dbf3"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+class AttackType(str, Enum):
+    SQL_INJECTION = "sql_injection"
+    XSS = "xss"
+    COMMAND_INJECTION = "command_injection"
+    PATH_TRAVERSAL = "path_traversal"
+    CSRF = "csrf"
+    LFI = "local_file_inclusion"
+    RFI = "remote_file_inclusion"
+    XXE_INJECTION = "xxe_injection"
+    SSRF = "ssrf"
+    LDAP_INJECTION = "ldap_injection"
+    CODE_INJECTION = "code_injection"
+    DOS = "denial_of_service"
+    BUFFER_OVERFLOW = "buffer_overflow"
+    HTTP_HEADER_INJECTION = "http_header_injection"
+    DIRECTORY_TRAVERSAL = "directory_traversal"
+    SESSION_FIXATION = "session_fixation"
+    CLICKJACKING = "clickjacking"
+    PHISHING = "phishing"
+    NORMAL = "normal"
+    UNKNOWN = "unknown"
 
 
 class AttackPatterns:
@@ -174,7 +197,7 @@ def create_sample_messages(domain: str, num_messages: int = 1000) -> list:
                 "domain": domain,
                 "ip_address": ip_address,
                 "message": message_text,
-                "type": "form_input",
+                "type": random.choice(list(AttackType)).value,
                 "is_malicious": is_malicious,
                 "caused_block": caused_block,
                 "created_at": timestamp,
@@ -223,9 +246,3 @@ def upgrade():
             domain, num_messages=500
         )  # 500 messages per domain
         op.bulk_insert(text_messages, messages)
-
-
-def downgrade():
-    # Only delete the text_messages we added, not the domains
-    # We can identify them by the specific type we used
-    op.execute("DELETE FROM text_messages WHERE type = 'form_input'")
