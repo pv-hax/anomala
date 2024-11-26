@@ -124,7 +124,7 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     # Transform text messages
     text_logs = [
         AttackLog(
-            ip=message.ip_address,
+            ip="IP redacted",  # Redact the IP address
             type_of_attack=message.type,
             timestamp=message.created_at,
             blocked=message.caused_block if message.caused_block is not None else False,
@@ -137,10 +137,11 @@ async def get_attack_logs(db: Session = Depends(get_db)):
     # Transform localStorage messages
     storage_logs = [
         AttackLog(
-            ip=message.ip_address,
+            ip="IP redacted",  # Redact the IP address
             type_of_attack="localStorage",
             timestamp=message.created_at,
-            blocked=message.blocked_at is not None,  # Use blocked_at to determine if it was blocked
+            blocked=message.blocked_at
+            is not None,  # Use blocked_at to determine if it was blocked
             confidence_score=message.confidence_score,  # Use the actual confidence score
             is_malicious=message.is_malicious,  # Add is_malicious flag
             is_local_storage=True,
@@ -215,62 +216,62 @@ async def get_attack_stats(db: Session = Depends(get_db)):
     )
 
 
-@app.post("/replays-test")
-async def save_html(request: Request):
+# @app.post("/replays-test")
+# async def save_html(request: Request):
 
-    content = await request.body()
-    parsed_data = ""
+#     content = await request.body()
+#     parsed_data = ""
 
-    CF_TOKEN = getenv("CF_TOKEN")
-    CF_ACCESS_ID = getenv("CF_ACCESS_ID")
-    CF_SECRET_ACCESS_KEY = getenv("CF_SECRET_ACCESS_KEY")
-    CF_S3_ENDPOINT = getenv("CF_S3_ENDPOINT")
+#     CF_TOKEN = getenv("CF_TOKEN")
+#     CF_ACCESS_ID = getenv("CF_ACCESS_ID")
+#     CF_SECRET_ACCESS_KEY = getenv("CF_SECRET_ACCESS_KEY")
+#     CF_S3_ENDPOINT = getenv("CF_S3_ENDPOINT")
 
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=CF_ACCESS_ID,
-        aws_secret_access_key=CF_SECRET_ACCESS_KEY,
-        endpoint_url=CF_S3_ENDPOINT,
-    )
+#     s3_client = boto3.client(
+#         "s3",
+#         aws_access_key_id=CF_ACCESS_ID,
+#         aws_secret_access_key=CF_SECRET_ACCESS_KEY,
+#         endpoint_url=CF_S3_ENDPOINT,
+#     )
 
-    content_str = content.decode("utf-8")
-    content_dict = json.loads(content_str)
+#     content_str = content.decode("utf-8")
+#     content_dict = json.loads(content_str)
 
-    for event in content_dict["events"]:
-        parsed_data += json.dumps(event) + ","
+#     for event in content_dict["events"]:
+#         parsed_data += json.dumps(event) + ","
 
-    html_template = f"""<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Recording @IP</title>
-    <link rel="stylesheet" href="../dist/style.css" />
-  </head>
-  <body>
-    <script src="../dist/rrweb.umd.cjs"></script>
-    <script>
-      const events = [{parsed_data}];
-      const replayer = new rrweb.Replayer(events, {{
-        UNSAFE_replayCanvas: true,
-      }});
-      replayer.play();
-    </script>
-  </body>
-</html>"""
+#     html_template = f"""<!DOCTYPE html>
+# <html lang="en">
+#   <head>
+#     <meta charset="UTF-8" />
+#     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+#     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+#     <title>Recording @IP</title>
+#     <link rel="stylesheet" href="../dist/style.css" />
+#   </head>
+#   <body>
+#     <script src="../dist/rrweb.umd.cjs"></script>
+#     <script>
+#       const events = [{parsed_data}];
+#       const replayer = new rrweb.Replayer(events, {{
+#         UNSAFE_replayCanvas: true,
+#       }});
+#       replayer.play();
+#     </script>
+#   </body>
+# </html>"""
 
-    file_path = "/tmp/replay.html"
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(html_template)
+#     file_path = "/tmp/replay.html"
+#     with open(file_path, "w", encoding="utf-8") as file:
+#         file.write(html_template)
 
-    bucket_name = "replays-test-pv-hack"
-    object_name = "test-replay/replay.html"
+#     bucket_name = "replays-test-pv-hack"
+#     object_name = "test-replay/replay.html"
 
-    try:
-        s3_client.upload_file(file_path, bucket_name, object_name)
-        print(f"File uploaded successfully to {bucket_name}/{object_name}")
-    except Exception as e:
-        print(f"Error uploading file: {e}")
+#     try:
+#         s3_client.upload_file(file_path, bucket_name, object_name)
+#         print(f"File uploaded successfully to {bucket_name}/{object_name}")
+#     except Exception as e:
+#         print(f"Error uploading file: {e}")
 
-    return {"status": "success", "id": 1}
+#     return {"status": "success", "id": 1}
